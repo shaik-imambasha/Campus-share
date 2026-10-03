@@ -5,23 +5,41 @@ CampusShare is a campus-first sharing platform for students to lend, donate, exc
 ## Features
 
 - Student registration and sign in with bcrypt password hashing and signed JWT sessions.
-- Searchable item shelf with category and sharing-type filters, item details, listing creation, owner editing, and removal.
-- Request lifecycle with owner decisions, notifications, and transaction tracking/return.
+- Searchable item shelf with category, condition, availability, sharing-mode, and rental-price filters.
+- Borrow, rent, donate, and exchange requests with date ranges, rental estimates, owner decisions, and two-party handoff/return confirmation.
+- Request-scoped messaging, notifications, public trust profiles, post-completion reviews, and database-backed CampusShare impact totals.
+- Item details, listing creation, owner availability controls, and listing removal.
 - User reports and administrator report review/account suspension endpoints.
 - Responsive layouts, server-side validation, parameterized SQL, Helmet headers, CORS, and authentication rate limiting.
 
 ## Requirements and setup
 
-Use Node.js 18+, npm 9+, and PostgreSQL 14+.
+Use Node.js 20.19+ and PostgreSQL 14+. The repository is a pnpm workspace.
 
 1. Install/start PostgreSQL and create a database using your own PostgreSQL administration account. The project does not assume a PostgreSQL username or password.
 2. Copy `.env.example` to `.env` in the repository root. Set either `DATABASE_URL` or all of `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD`. The backend uses `DATABASE_URL` when it is nonempty; otherwise it uses the `DB_*` fields. Keep real values only in the ignored `.env` file.
-3. Apply `database/schema.sql` to that database using a PostgreSQL client authenticated with your own database role. For example, in `psql`, connect to the configured database and run `\i 'database/schema.sql'`. The schema creates the tables, indexes, and starter categories; the connecting role must have permission to create the `pgcrypto` extension (or have an administrator enable it first).
+3. Apply `database/schema.sql` to that database using a PostgreSQL client authenticated with your own database role. For example, in `psql`, connect to the configured database and run `\i 'database/schema.sql'`. The schema creates the tables, indexes, starter categories, and additive Rent & Reuse workflow fields/tables. The backend does not automatically change the database schema. For an existing deployment that already ran the original schema, apply `database/migrations/001_rent_reuse_features.sql` once; it adds fields and tables without deleting production data. The connecting role must have permission to create the `pgcrypto` extension (or have an administrator enable it first).
 4. Set a private random `JWT_SECRET` of at least 32 characters in `.env`. Never commit `.env`, and never put database credentials or JWT secrets in frontend variables.
-5. Install dependencies from the repository root: `npm install`, `npm install --prefix client`, and `npm install --prefix server`.
-6. Start both applications from the repository root with `npm run dev`. The server loads the root `.env` through `dotenv`.
+5. Install workspace dependencies from the repository root with `pnpm install`.
+6. Start both applications from the repository root with `pnpm dev`. The server loads the root `.env` through `dotenv`.
 
-The frontend runs at `http://localhost:5173`; the API runs at `http://localhost:5000`. The frontend defaults to `http://localhost:5000/api`, matching the backend's default port and `/api` route prefix. If the API URL differs, set `VITE_API_URL` in `client/.env.local` (for example `VITE_API_URL=https://your-api-host.example/api`); this is a public API endpoint setting, never a place for secrets. `CLIENT_URL` may contain comma-separated allowed frontend origins. In production, the backend enables verified PostgreSQL TLS by default; configure the database provider's TLS certificate chain appropriately.
+The frontend runs at `http://localhost:5173`; the API runs at `http://localhost:5000`. The frontend defaults to `http://localhost:5000/api` in local development. Set the public API endpoint in `VITE_API_URL` at frontend build time (for example `https://your-api-host.example/api`); never place secrets in Vite variables. `CLIENT_URL` may contain comma-separated allowed frontend origins. In production, the backend enables verified PostgreSQL TLS by default; configure the database provider's TLS certificate chain appropriately.
+
+## Sharing workflow
+
+Listings can be offered for borrowing, renting, both, donation, or exchange. Sharing requests require a date range and can include an optional note. Rental prices are recorded per day and the expected total is shown before a request is sent. Request participants can message each other within their authorized request conversation. Once a share is completed, each participant can leave one 1–5 star review of the other participant. Home page impact totals are live counts from PostgreSQL and show zero when no matching activity exists.
+
+Apply database schema changes before deploying the matching backend. For existing production data, apply only the additive SQL migration above; do not rerun destructive/reset scripts. Back up production before any database maintenance.
+
+## Render deployment
+
+- Frontend static site root directory: repository root (`.`)
+- Frontend build command: `pnpm install --frozen-lockfile && pnpm --filter campusshare-client build`
+- Frontend publish directory: `client/dist`
+- Frontend environment: `VITE_API_URL` set to the Render backend URL ending in `/api`
+- Backend build command: `pnpm install --frozen-lockfile`
+- Backend start command: `pnpm --filter campusshare-server start`
+- Backend environment: `NODE_ENV=production`, `CLIENT_URL` set to the frontend origin, `JWT_SECRET` set to a private random value of at least 32 characters, and either `DATABASE_URL` or `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`; configure `DB_SSL=true` and provide the provider root certificate with `DB_SSL_CA_BASE64` when required.
 
 ## Administrator provisioning
 
