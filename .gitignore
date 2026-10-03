@@ -1,0 +1,34 @@
+# Dependencies and package-manager caches
+node_modules/
+.pnpm-store/
+.npm/
+
+# Local PNPM build-approval state created during dependency installation
+client/pnpm-workspace.yaml
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+secrets/
+.secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+
+# Generated output and test artifacts
+dist/
+build/
+coverage/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Local/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
