@@ -13,6 +13,10 @@ client/pnpm-workspace.yaml
 secrets/
 .secrets/
 *.pem
+*.crt
+*.cer
+*.cert
+*.der
 *.key
 *.p12
 *.pfx
