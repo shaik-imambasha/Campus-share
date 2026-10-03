@@ -3,7 +3,9 @@ import ReactDOM from 'react-dom/client';
 import {BrowserRouter,Link,useLocation,useNavigate,useParams} from 'react-router-dom';
 import './styles/global.css';
 
-const API=(import.meta.env.VITE_API_URL||'http://localhost:5000/api').replace(/\/$/,'');
+const apiBase=import.meta.env.VITE_API_URL||(import.meta.env.DEV?'http://localhost:5000/api':'');
+if(!apiBase)throw new Error('VITE_API_URL must be set for production.');
+const API=apiBase.replace(/\/$/,'');
 async function api(path,{token,...options}={}){const res=await fetch(API+path,{...options,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{ }),...options?.headers}});if(!res.ok){const body=await res.json().catch(()=>({}));throw Error(body.message||'Something went wrong. Please try again.')}if(res.status===204)return null;return res.json()}
 const getToken=()=>localStorage.getItem('campusshare-token');
 const conditionLabel={new:'New',like_new:'Like new',good:'Good',used:'Used'};

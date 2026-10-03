@@ -20,4 +20,4 @@ app.use(notFound);
 app.use(errorHandler);
 
 const PORT = Number(process.env.PORT || 5000);
-app.listen(PORT, () => console.log(`CampusShare API running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`CampusShare API running on port ${PORT}`));

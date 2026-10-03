@@ -2,12 +2,15 @@ const { Pool } = require('pg');
 const fs = require('fs');
 
 const sslEnabled = process.env.DB_SSL === 'true' || process.env.NODE_ENV === 'production';
+const caCertificate = process.env.DB_SSL_CA_BASE64
+  ? Buffer.from(process.env.DB_SSL_CA_BASE64, 'base64').toString('utf8')
+  : process.env.DB_SSL_CA_FILE
+    ? fs.readFileSync(process.env.DB_SSL_CA_FILE, 'utf8')
+    : undefined;
 const ssl = sslEnabled
   ? {
-      rejectUnauthorized: process.env.PGSSL_REJECT_UNAUTHORIZED !== 'false',
-      ...(process.env.DB_SSL_CA_FILE
-        ? { ca: fs.readFileSync(process.env.DB_SSL_CA_FILE, 'utf8') }
-        : {}),
+      rejectUnauthorized: true,
+      ...(caCertificate ? { ca: caCertificate } : {}),
     }
   : false;
 const connection = process.env.DATABASE_URL
