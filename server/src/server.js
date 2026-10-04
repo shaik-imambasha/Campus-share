@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const health = require('./routes/healthRoutes');
 const api = require('./routes/apiRoutes');
+const authApi = require('./routes/authRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -12,9 +13,25 @@ app.disable('x-powered-by');
 app.use(helmet());
 app.use(cors({ origin: (process.env.CLIENT_URL || 'http://localhost:5173').split(',').map(s => s.trim()), credentials: true }));
 app.use(express.json({ limit: '1mb' }));
-app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: 'draft-8', legacyHeaders: false }));
+const authLimit = limit => rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  handler: (_req, res) => res.status(429).json({ success: false, message: 'Too many attempts. Please wait a little before trying again.' }),
+});
+app.use('/api/auth', authLimit(30));
+app.use('/api/auth/login', authLimit(8));
+app.use('/api/auth/register', authLimit(5));
+app.use('/api/auth/approval/resend', authLimit(5));
+app.use('/api/auth/verification/resend', authLimit(5));
+app.use('/api/auth/password/forgot', authLimit(5));
+app.use('/api/auth/approval/approve', authLimit(20));
+app.use('/api/auth/verification/verify', authLimit(20));
+app.use('/api/auth/password/reset', authLimit(10));
 app.get('/api', (_req, res) => res.json({ name: 'CampusShare API', version: '1.0.0', status: 'online' }));
 app.use('/api/health', health);
+app.use('/api/auth', authApi);
 app.use('/api', api);
 app.use(notFound);
 app.use(errorHandler);
