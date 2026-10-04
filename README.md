@@ -5,10 +5,12 @@ CampusShare is a campus-first sharing platform for students to lend, donate, exc
 ## Features
 
 - Student registration and sign in with bcrypt password hashing and signed JWT sessions.
+- Optional sign-in confirmation emails sent by the backend after successful login.
 - Searchable item shelf with category, condition, availability, sharing-mode, and rental-price filters.
 - Borrow, rent, donate, and exchange requests with date ranges, rental estimates, owner decisions, and two-party handoff/return confirmation.
 - Request-scoped messaging, notifications, public trust profiles, post-completion reviews, and database-backed CampusShare impact totals.
 - Item details, listing creation, owner availability controls, and listing removal.
+- Item photo selection from a camera, gallery, or computer, with a preview before posting.
 - User reports and administrator report review/account suspension endpoints.
 - Responsive layouts, server-side validation, parameterized SQL, Helmet headers, CORS, and authentication rate limiting.
 
@@ -20,10 +22,13 @@ Use Node.js 20.19+ and PostgreSQL 14+. The repository is a pnpm workspace.
 2. Copy `.env.example` to `.env` in the repository root. Set either `DATABASE_URL` or all of `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD`. The backend uses `DATABASE_URL` when it is nonempty; otherwise it uses the `DB_*` fields. Keep real values only in the ignored `.env` file.
 3. Apply `database/schema.sql` to that database using a PostgreSQL client authenticated with your own database role. For example, in `psql`, connect to the configured database and run `\i 'database/schema.sql'`. The schema creates the tables, indexes, starter categories, and additive Rent & Reuse workflow fields/tables. The backend does not automatically change the database schema. For an existing deployment that already ran the original schema, apply `database/migrations/001_rent_reuse_features.sql` once; it adds fields and tables without deleting production data. The connecting role must have permission to create the `pgcrypto` extension (or have an administrator enable it first).
 4. Set a private random `JWT_SECRET` of at least 32 characters in `.env`. Never commit `.env`, and never put database credentials or JWT secrets in frontend variables.
-5. Install workspace dependencies from the repository root with `pnpm install`.
-6. Start both applications from the repository root with `pnpm dev`. The server loads the root `.env` through `dotenv`.
+5. Optional login confirmation email: set the backend-only `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_SECURE`, `EMAIL_USER`, `EMAIL_PASSWORD`, and `EMAIL_FROM` variables. For Gmail, use `smtp.gmail.com`, port `465`, secure TLS, and a Google App Password (never your account password). If these are not configured, login works normally and no email is sent.
+6. Install workspace dependencies from the repository root with `pnpm install`.
+7. Start both applications from the repository root with `pnpm dev`. The server loads the root `.env` through `dotenv`.
 
 The frontend runs at `http://localhost:5173`; the API runs at `http://localhost:5000`. The frontend defaults to `http://localhost:5000/api` in local development. Set the public API endpoint in `VITE_API_URL` at frontend build time (for example `https://your-api-host.example/api`); never place secrets in Vite variables. `CLIENT_URL` may contain comma-separated allowed frontend origins. In production, the backend enables verified PostgreSQL TLS by default; configure the database provider's TLS certificate chain appropriately.
+
+Item photos selected from a device are stored as validated JPG, PNG, or WebP data URLs in the existing `item_images.image_url` PostgreSQL field (maximum 600 KB per image). Existing HTTPS image URLs remain supported. This uses the current storage model and does not require frontend storage credentials.
 
 ## Sharing workflow
 
