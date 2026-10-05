@@ -23,12 +23,6 @@ const authLimit = limit => rateLimit({
 app.use('/api/auth', authLimit(30));
 app.use('/api/auth/login', authLimit(8));
 app.use('/api/auth/register', authLimit(5));
-app.use('/api/auth/approval/resend', authLimit(5));
-app.use('/api/auth/verification/resend', authLimit(5));
-app.use('/api/auth/password/forgot', authLimit(5));
-app.use('/api/auth/approval/approve', authLimit(20));
-app.use('/api/auth/verification/verify', authLimit(20));
-app.use('/api/auth/password/reset', authLimit(10));
 app.get('/api', (_req, res) => res.json({ name: 'CampusShare API', version: '1.0.0', status: 'online' }));
 app.use('/api/health', health);
 app.use('/api/auth', authApi);

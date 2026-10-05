@@ -103,3 +103,12 @@ DO $$ BEGIN
   END IF;
 END $$;
 CREATE INDEX IF NOT EXISTS idx_messages_inquiry_created ON messages(inquiry_id,created_at) WHERE inquiry_id IS NOT NULL;
+
+-- Per-user saved listings.
+CREATE TABLE IF NOT EXISTS favorites (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  item_id UUID NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY(user_id,item_id)
+);
+CREATE INDEX IF NOT EXISTS idx_favorites_item_id ON favorites(item_id);
